@@ -1,7 +1,19 @@
-# sounds-recipe-
+# SOUND RECIPE
+
+Web Audio APIで、Web教材に使える効果音を試聴・比較・コピーできる音のレシピ集です。
+
+## できること
+
+- 正解・不正解・決定・通知・開始・達成などの音を試聴
+- 学習／UI／ゲームのカテゴリで絞り込み
+- 名前や用途で検索
+- 音量調整、連続試聴、お気に入り保存
+- JavaScriptのレシピをコピーして、自作教材に利用
 
 ## 公開ページ
 
-Web Audio APIで音を試作・確認するためのツールです。
-
 [GitHub Pagesで開く](https://tt-sensei.github.io/sounds-recipe-/)
+
+## 追加方法
+
+sounds.js の soundList に、名前・説明・色・再生処理・コピー用コードを追加するとカードが自動で増えます。
