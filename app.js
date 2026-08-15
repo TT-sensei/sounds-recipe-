@@ -1,78 +1,10 @@
-// =============================================
-// app.js — メインロジック
-// sounds.js からデータを受け取って画面を生成
-// =============================================
-
-import { soundList } from ‘./sounds.js’;
-
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-const container = document.getElementById(‘catalog’);
-const toast = document.getElementById(‘toast’);
-
-function showToast() {
-toast.classList.add(‘show’);
-setTimeout(() => toast.classList.remove(‘show’), 2000);
-}
-
-soundList.forEach(sound => {
-const card = document.createElement(‘div’);
-card.className = ‘card’;
-card.style.setProperty(’–card-color’, sound.color);
-
-```
-card.innerHTML = `
-    <div class="card-id">#${sound.id}</div>
-    <h3>${sound.name}</h3>
-    <p>${sound.desc}</p>
-    <div class="viz"><div class="viz-bar" id="viz-${sound.id}"></div></div>
-    <div class="card-actions">
-        <button class="btn btn-play" id="play-${sound.id}">▶ 再生</button>
-        <button class="btn btn-copy" id="copy-${sound.id}">コピー</button>
-    </div>
-`;
-
-// 再生ボタン
-const playBtn = card.querySelector(`#play-${sound.id}`);
-const vizBar = card.querySelector(`#viz-${sound.id}`);
-
-playBtn.onclick = async () => {
-    if (audioCtx.state === 'suspended') await audioCtx.resume();
-    const duration = sound.play(audioCtx);
-    playBtn.classList.add('playing');
-    playBtn.textContent = '♪ 再生中';
-
-    // ビジュアライザーアニメーション
-    const start = performance.now();
-    const animate = () => {
-        const elapsed = (performance.now() - start) / 1000;
-        const progress = Math.min(elapsed / duration, 1);
-        const wave = Math.sin(elapsed * 30) * 0.5 + 0.5;
-        vizBar.style.width = (progress * 100 * wave + (1 - progress) * 100) * progress + '%';
-        if (elapsed < duration) requestAnimationFrame(animate);
-        else {
-            vizBar.style.width = '0%';
-            playBtn.classList.remove('playing');
-            playBtn.textContent = '▶ 再生';
-        }
-    };
-    requestAnimationFrame(animate);
-};
-
-// コピーボタン
-const copyBtn = card.querySelector(`#copy-${sound.id}`);
-copyBtn.onclick = () => {
-    navigator.clipboard.writeText(sound.code).then(() => {
-        copyBtn.textContent = '✓ コピー済';
-        copyBtn.classList.add('copied');
-        showToast();
-        setTimeout(() => {
-            copyBtn.textContent = 'コピー';
-            copyBtn.classList.remove('copied');
-        }, 2000);
-    });
-};
-
-container.appendChild(card);
-```
-
-});
+import { soundList } from './sounds.js';
+const audioCtx=new(window.AudioContext||window.webkitAudioContext)(),catalog=document.querySelector('#catalog'),filters=document.querySelector('#filters'),search=document.querySelector('#search'),count=document.querySelector('#resultCount'),empty=document.querySelector('#empty'),volume=document.querySelector('#volume'),volumeValue=document.querySelector('#volumeValue'),toast=document.querySelector('#toast');
+let category='すべて',activeCard=null,toastTimer;const favorites=new Set(JSON.parse(localStorage.getItem('sound-recipe-favorites')||'[]'));
+const categories=['すべて',...new Set(soundList.map(s=>s.category))];filters.innerHTML=categories.map((c,i)=>`<button class="filter${i?'':' active'}" type="button" role="tab" aria-selected="${!i}" data-category="${c}">${c}</button>`).join('');
+function showToast(message){toast.textContent=message;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),1900)}
+function visible(){const word=search.value.trim().toLowerCase();return soundList.filter(s=>(category==='すべて'||s.category===category)&&(!word||`${s.name} ${s.desc} ${s.category} ${s.use}`.toLowerCase().includes(word)))}
+function render(){const list=visible();count.textContent=`${list.length} / ${soundList.length} recipes`;empty.classList.toggle('hidden',!!list.length);catalog.innerHTML=list.map(s=>{const bars=Array.from({length:22},(_,i)=>`<i style="--h:${16+(i*17+s.id.length*7)%28}px"></i>`).join('');return `<article class="card" data-id="${s.id}" style="--card-color:${s.color}"><div class="card-top"><span class="tag">${s.category} / ${s.use}</span><button class="favorite${favorites.has(s.id)?' on':''}" data-favorite="${s.id}" aria-label="${s.name}をお気に入りに登録">★</button></div><h3>${s.name}</h3><p>${s.desc}</p><div class="wave" aria-hidden="true">${bars}</div><div class="card-actions"><button class="btn btn-play" data-play="${s.id}">▶ 試聴する</button><button class="btn btn-copy" data-copy="${s.id}">コード</button></div></article>`}).join('')}
+async function play(sound){if(audioCtx.state==='suspended')await audioCtx.resume();if(activeCard)activeCard.classList.remove('playing');activeCard=document.querySelector(`[data-id="${sound.id}"]`);if(activeCard)activeCard.classList.add('playing');const duration=sound.play(audioCtx,Number(volume.value)/100),button=activeCard?.querySelector('.btn-play');if(button)button.textContent='♪ 再生中';setTimeout(()=>{if(activeCard)activeCard.classList.remove('playing');if(button)button.textContent='▶ 試聴する';activeCard=null},duration*1000+80)}
+catalog.addEventListener('click',async e=>{const playButton=e.target.closest('[data-play]'),copyButton=e.target.closest('[data-copy]'),fav=e.target.closest('[data-favorite]');if(playButton)play(soundList.find(s=>s.id===playButton.dataset.play));if(copyButton){const s=soundList.find(x=>x.id===copyButton.dataset.copy);await navigator.clipboard.writeText(s.code);copyButton.textContent='✓ コピー済';copyButton.classList.add('copied');showToast(`${s.name}のコードをコピーしました`);setTimeout(()=>{copyButton.textContent='コード';copyButton.classList.remove('copied')},1800)}if(fav){const id=fav.dataset.favorite;favorites.has(id)?favorites.delete(id):favorites.add(id);localStorage.setItem('sound-recipe-favorites',JSON.stringify([...favorites]));render();showToast(favorites.has(id)?'お気に入りに追加しました':'お気に入りから外しました')}});
+filters.addEventListener('click',e=>{const b=e.target.closest('[data-category]');if(!b)return;category=b.dataset.category;filters.querySelectorAll('.filter').forEach(x=>{const on=x===b;x.classList.toggle('active',on);x.setAttribute('aria-selected',on)});render()});search.addEventListener('input',render);volume.addEventListener('input',()=>{volumeValue.value=`${volume.value}%`;volumeValue.textContent=`${volume.value}%`});document.querySelector('#playAll').addEventListener('click',async()=>{for(const s of visible()){await play(s);await new Promise(r=>setTimeout(r,s.duration*1000+180))}});render();
