@@ -2,6 +2,8 @@
 
 このファイルは、今後Web教材を作るときに「どの場面で、どの音を使うか」を迷わないための設計メモです。
 
+4資産を組み合わせる全体方針と`edu-components`のイベント連携は、[edu-componentsのAI-GUIDE](https://github.com/TT-sensei/edu-components/blob/main/AI-GUIDE.md)を参照してください。
+
 ## 基本方針
 
 - 外部音源・外部ライブラリなし。Web Audio APIだけで生成する。
@@ -41,20 +43,25 @@
 ## アプリに組み込むときの例
 
 ```js
-// 正解したとき
-playSound('correct');
+import { soundList } from 'https://tt-sensei.github.io/sounds-recipe-/sounds.js';
 
-// 5問連続正解したとき
-playSound('combo5');
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-// バッジを獲得したとき
-playSound('badge');
+async function playRecipe(id, volume = 0.25) {
+  if (audioContext.state === 'suspended') await audioContext.resume();
+  const recipe = soundList.find((item) => item.id === id);
+  if (!recipe) return false;
+  recipe.play(audioContext, volume);
+  return true;
+}
 
-// 図鑑にレアエレメントが追加されたとき
-playSound('elementRare');
+playRecipe('correct');     // 正解
+playRecipe('combo5');      // 5問連続正解
+playRecipe('badge');       // バッジ獲得
+playRecipe('elementRare'); // レアエレメント発見
 ```
 
-実際のアプリでは、音量設定を共通化し、連打時に同じ音が重なりすぎないようにする。
+`playSound()`という共通APIや音声ファイルは公開していません。実際のアプリでは、音量設定を共通化し、連打時に同じ音が重なりすぎないようにします。
 
 ## 収録カテゴリ
 
