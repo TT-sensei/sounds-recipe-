@@ -33,22 +33,18 @@
 必要なレシピだけを`id`で取得して再生します。
 
 ```js
-import { soundList } from 'https://tt-sensei.github.io/sounds-recipe-/sounds.js';
+import { playSound } from 'https://tt-sensei.github.io/sounds-recipe-/sounds.js';
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-async function playRecipe(id, volume = 0.25) {
-  if (audioContext.state === 'suspended') await audioContext.resume();
-  const recipe = soundList.find((item) => item.id === id);
-  if (!recipe) return false;
-  recipe.play(audioContext, volume);
-  return true;
+async function playRecipe(id, volume = 0.22) {
+  return playSound(audioContext, id, volume);
 }
 ```
 
 音声はブラウザの自動再生制限があるため、最初のボタン操作などユーザー操作後に再生します。教材側には音量・ミュート設定を用意し、授業中でも無音で利用できるようにしてください。
 
-`playSound()`など、READMEや`SOUND_GUIDE.md`に記載されていない共通APIを推測して実装しないでください。
+公開APIは`playSound(audioContext, id, volume)`と`getSound(id)`です。AIで教材を作る場合は[`AI-GUIDE.md`](AI-GUIDE.md)を先に確認してください。
 
 ## 教材制作共通基盤
 
