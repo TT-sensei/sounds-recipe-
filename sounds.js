@@ -105,3 +105,24 @@ recipe('surprise','サプライズ','予想外のごほうびや演出が出た�
 recipe('classComplete','学級チャレンジ完了','学級全体のチャレンジを終えたときの音','ごほうび','学級達成','#ffd166',1.9,(c,v)=>simple(c,v,[[392,0,.16,'triangle',.11],[494,.14,.16,'triangle',.12],[587,.28,.16,'triangle',.13],[659,.42,.16,'triangle',.14],[784,.56,.16,'triangle',.15],[988,.7,1,'triangle',.19]]),codeFor([[392,0,.16],[494,.14,.16],[587,.28,.16],[659,.42,.16],[784,.56,.16],[988,.7,1]],'triangle')),
 recipe('schoolBell','チャイム','授業の始まりや終わりを知らせるやさしいチャイム','UI','チャイム','#f2c56f',1.35,(c,v)=>simple(c,v,[[659,0,.26,'sine',.12],[784,.2,.26,'sine',.13],[659,.46,.5,'sine',.14]]),codeFor([[659,0,.26],[784,.2,.26],[659,.46,.5]]))
 ];
+
+
+// 安定した公開API。教材側ではIDだけを指定して再生できます。
+export function getSound(id) {
+  return soundList.find((item) => item.id === id) ?? null;
+}
+
+export async function playSound(audioContext, id, volume = 0.25) {
+  if (!audioContext || typeof audioContext.resume !== 'function') return false;
+  const sound = getSound(id);
+  if (!sound) return false;
+  if (audioContext.state === 'closed') return false;
+  try {
+    if (audioContext.state === 'suspended') await audioContext.resume();
+    sound.play(audioContext, Math.max(0, Math.min(1, Number(volume) || 0)));
+    return true;
+  } catch (error) {
+    console.warn('[SOUND RECIPE] 再生できませんでした:', id, error);
+    return false;
+  }
+}
