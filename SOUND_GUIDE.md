@@ -43,16 +43,12 @@
 ## アプリに組み込むときの例
 
 ```js
-import { soundList } from 'https://tt-sensei.github.io/sounds-recipe-/sounds.js';
+import { playSound } from 'https://tt-sensei.github.io/sounds-recipe-/sounds.js';
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-async function playRecipe(id, volume = 0.25) {
-  if (audioContext.state === 'suspended') await audioContext.resume();
-  const recipe = soundList.find((item) => item.id === id);
-  if (!recipe) return false;
-  recipe.play(audioContext, volume);
-  return true;
+async function playRecipe(id, volume = 0.22) {
+  return playSound(audioContext, id, volume);
 }
 
 playRecipe('correct');     // 正解
@@ -61,7 +57,7 @@ playRecipe('badge');       // バッジ獲得
 playRecipe('elementRare'); // レアエレメント発見
 ```
 
-`playSound()`という共通APIや音声ファイルは公開していません。実際のアプリでは、音量設定を共通化し、連打時に同じ音が重なりすぎないようにします。
+`playSound(audioContext, id, volume)`と`getSound(id)`を公開APIとして利用できます。AIで教材を作る場合は[`AI-GUIDE.md`](AI-GUIDE.md)を先に確認してください。実際のアプリでは、音量設定を共通化し、連打時に同じ音が重なりすぎないようにします。
 
 ## 収録カテゴリ
 
